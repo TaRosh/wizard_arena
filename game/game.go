@@ -26,13 +26,14 @@ type Game struct {
 	// resampled points
 	ResampledStroke []mathx.Vec2
 
-	Spells     []spell.Spell
-	Normalize  []mathx.Vec2
-	Comparison float64
+	Spells      []spell.Spell
+	Normalize   []mathx.Vec2
+	Comparison  float64
+	CastedSpell string
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("Comparison is %f", g.Comparison))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("Comparison is %f %q", g.Comparison, g.CastedSpell))
 	// draw raw points
 	for _, p := range g.Stroke.Points {
 		vector.StrokeCircle(screen, float32(p.X), float32(p.Y), 2, 2, color.White, false)
@@ -107,7 +108,24 @@ func (g *Game) updateStroke() {
 	if g.Input.Buttons.IsLeftJustReleased() && len(g.Stroke.Points) > 1 {
 		g.ResampledStroke = gesture.Resample(g.Stroke.Points, 32)
 		g.Normalize = gesture.Normalize(g.ResampledStroke)
+		g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureCircle.Points)
+		guess := g.Comparison
+		g.CastedSpell = spell.GestureCircle.Name
+		g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureY.Points)
+		if g.Comparison < guess {
+			guess = g.Comparison
+			g.CastedSpell = spell.GestureY.Name
+		}
 		g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureFireball.Points)
+		if g.Comparison < guess {
+			guess = g.Comparison
+			g.CastedSpell = spell.GestureFireball.Name
+		}
+		g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureWind.Points)
+		if g.Comparison < guess {
+			guess = g.Comparison
+			g.CastedSpell = spell.GestureWind.Name
+		}
 		g.Stroke.Points = g.Stroke.Points[:0]
 		g.ResampledStroke = g.ResampledStroke[:0]
 		return
