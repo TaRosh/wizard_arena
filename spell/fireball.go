@@ -5,6 +5,12 @@ import (
 	"github.com/TaRosh/wizard_arena/mathx"
 )
 
+var (
+	GestureCircle = GetTemplate("shied", "templating/a.png")
+	GestureY      = GetTemplate("Thunderbalt", "templating/b.png")
+	GestureWind   = GetTemplate("Wind", "templating/c.png")
+)
+
 var GestureFireball = GestureTemplate{
 	Name: "Fireball",
 	// square

@@ -1,58 +1,12 @@
-package main
+package templating
 
 import (
-	"fmt"
 	"image"
 	"image/color"
-	_ "image/png"
-	"os"
 
 	"github.com/quasilyte/gmath"
 )
 
-type Point struct {
-	Visits    int
-	MaxVisits int
-	Pos       gmath.Vec
-}
-
-func (p Point) Dot(other Point) float64 {
-	return p.Pos.Dot(other.Pos)
-}
-
-func (p Point) Coord() (x int, y int) {
-	return int(p.Pos.X), int(p.Pos.Y)
-}
-
-func IsBlack(c color.Color) bool {
-	r1, g1, b1, _ := c.RGBA()
-	r2, g2, b2, _ := color.Black.RGBA()
-	return r1 == r2 && g1 == g2 && b1 == b2
-}
-
-type Tree struct {
-	Width  int
-	Height int
-	img    image.Image
-	points [][]Point
-}
-
-func (t Tree) getNeighbors(x, y int, dirs []struct{ dx, dy int }) []Point {
-	var neighbors []Point
-	for _, d := range dirs {
-		nx, ny := x+d.dx, y+d.dy
-		if nx >= 0 && nx < t.Width &&
-			ny >= 0 && ny < t.Height {
-			if IsBlack(t.img.At(nx, ny)) &&
-				t.points[nx][ny].Visits < t.points[nx][ny].MaxVisits {
-				neighbors = append(neighbors, t.points[nx][ny])
-			}
-		}
-	}
-	return neighbors
-}
-
-// return stroke
 func travers(img image.Image) []Point {
 	leftUp := img.Bounds().Min
 	rightBottom := img.Bounds().Max
@@ -97,7 +51,6 @@ func travers(img image.Image) []Point {
 		for y := range height {
 			if IsBlack(img.At(x, y)) {
 				degree := len(tree.getNeighbors(x, y, dirs))
-				fmt.Println("NEIGHTOBLS", len(tree.getNeighbors(x, y, dirs)), x, y)
 				switch degree {
 				case 1, 2:
 					tree.points[x][y].MaxVisits = 1
@@ -108,9 +61,7 @@ func travers(img image.Image) []Point {
 			}
 		}
 	}
-	fmt.Println("TREE", tree.points)
 	// points created
-	fmt.Println("Starting point", startingPoint)
 
 	// 1. starting point
 	path := make([]Point, 0)
@@ -120,7 +71,6 @@ func travers(img image.Image) []Point {
 	for len(stack) > 0 {
 		currentPoint = stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
-		fmt.Println("Current", currentPoint)
 		path = append(path, currentPoint)
 		points[int(currentPoint.Pos.X)][int(currentPoint.Pos.Y)].Visits++
 		// find neighbors !visited && black
@@ -138,7 +88,6 @@ func travers(img image.Image) []Point {
 		if len(neighbors) <= 0 {
 			continue
 		}
-		fmt.Println("Neighbors", neighbors)
 
 		var dir float64
 		var next int
@@ -162,31 +111,4 @@ func travers(img image.Image) []Point {
 		// set current to chosen neighbor
 	}
 	return path
-}
-
-func main() {
-	var f *os.File
-	var err error
-	var img image.Image
-	var path []Point
-	f, err = os.Open("a.png")
-	if err != nil {
-		panic(err)
-	}
-	img, _, err = image.Decode(f)
-	if err != nil {
-		panic(err)
-	}
-	path = travers(img)
-	fmt.Println("PATH O:", path)
-	f, err = os.Open("b.png")
-	if err != nil {
-		panic(err)
-	}
-	img, _, err = image.Decode(f)
-	if err != nil {
-		panic(err)
-	}
-	path = travers(img)
-	fmt.Println("PATH Y", path)
 }
