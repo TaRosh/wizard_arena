@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"image/color"
+	"math"
 
 	"github.com/TaRosh/wizard_arena/gesture"
 	"github.com/TaRosh/wizard_arena/mathx"
@@ -108,24 +109,34 @@ func (g *Game) updateStroke() {
 	if g.Input.Buttons.IsLeftJustReleased() && len(g.Stroke.Points) > 1 {
 		g.ResampledStroke = gesture.Resample(g.Stroke.Points, 32)
 		g.Normalize = gesture.Normalize(g.ResampledStroke)
-		g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureCircle.Points)
-		guess := g.Comparison
-		g.CastedSpell = spell.GestureCircle.Name
-		g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureY.Points)
-		if g.Comparison < guess {
-			guess = g.Comparison
-			g.CastedSpell = spell.GestureY.Name
+		// iterate over all spells
+		// pick closest
+		guess := math.MaxFloat64
+		for _, spell := range spell.Spells {
+			g.Comparison = gesture.CompareGestures(g.Normalize, spell.Points)
+			if g.Comparison < guess {
+				guess = g.Comparison
+				g.CastedSpell = spell.Name
+			}
 		}
-		g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureFireball.Points)
-		if g.Comparison < guess {
-			guess = g.Comparison
-			g.CastedSpell = spell.GestureFireball.Name
-		}
-		g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureWind.Points)
-		if g.Comparison < guess {
-			guess = g.Comparison
-			g.CastedSpell = spell.GestureWind.Name
-		}
+		// g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureCircle.Points)
+		// guess := g.Comparison
+		// g.CastedSpell = spell.GestureCircle.Name
+		// g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureY.Points)
+		// if g.Comparison < guess {
+		// 	guess = g.Comparison
+		// 	g.CastedSpell = spell.GestureY.Name
+		// }
+		// g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureFireball.Points)
+		// if g.Comparison < guess {
+		// 	guess = g.Comparison
+		// 	g.CastedSpell = spell.GestureFireball.Name
+		// }
+		// g.Comparison = gesture.CompareGestures(g.Normalize, spell.GestureWind.Points)
+		// if g.Comparison < guess {
+		// 	guess = g.Comparison
+		// 	g.CastedSpell = spell.GestureWind.Name
+		// }
 		g.Stroke.Points = g.Stroke.Points[:0]
 		g.ResampledStroke = g.ResampledStroke[:0]
 		return
@@ -146,10 +157,12 @@ func (g *Game) Update() error {
 }
 
 func NewGame(w, h int) *Game {
-	return &Game{
+	g := Game{
 		Width:  w,
 		Height: h,
 	}
+
+	return &g
 }
 
 func (g *Game) Run() error {

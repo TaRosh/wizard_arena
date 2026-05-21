@@ -41,3 +41,22 @@ func (v Vec2) Sub(other Vec2) Vec2 {
 		Y: -other.Y,
 	})
 }
+
+func (v Vec2) Dot(other Vec2) float64 {
+	return (v.X * other.X) + (v.Y * other.Y)
+}
+
+func (v Vec2) Normalize() Vec2 {
+	l := math.Sqrt(v.X*v.X + v.Y*v.Y)
+	if l != 0 {
+		return v.Mulf(1 / l)
+	}
+	return v
+}
+
+func (v Vec2) AngleBetween(other Vec2) float64 {
+	v1 := v.Normalize()
+	v2 := other.Normalize()
+	dot := v1.Dot(v2)
+	return math.Acos(dot)
+}
